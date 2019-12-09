@@ -49,7 +49,7 @@ def main():
     sent_file = args['sent_file']
     mode = args['mode']
     config = dict()
-    with open("config", 'r') as cf:
+    with open("./config", 'r') as cf:
         for l in cf:
             config[l.split(':')[0]] = l.split(':')[1]
     if mode == 'v':
