@@ -49,9 +49,9 @@ def main():
     sent_file = args['sent_file']
     mode = args['mode']
     config = dict()
-    with open("./config", 'r') as cf:
+    with open("config", 'r') as cf:
         for l in cf:
-            config[l.split(':')[0]] = l.split(':')[1]
+            config[l.split(':')[0]] = l.split(':')[1].rstrip()
     if mode == 'v':
         build_vocab(sent_file, config['vocab_file'], int(config['vocab_size'],
         int(config['subsample_size']), int(config['num_placeholders'])))
