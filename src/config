@@ -1,4 +1,6 @@
+## Vocabulary parameters ##
 vocab_file:base.train.halfwiki
 vocab_size:128000
 subsample_size:51200000
 num_placeholders:256
+## BERT training parameters ##
