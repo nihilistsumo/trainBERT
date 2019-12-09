@@ -42,16 +42,14 @@ def build_vocab(input_file, vocab_file, vocab_size, subsample_size, num_placehol
 
 def main():
     parser = argparse.ArgumentParser(description="Train BERT model")
-    parser.add_argument('-c', '--config', required=True, help="Path to config file")
     parser.add_argument('-s', '--sent_file', help="Path to sentence file")
     parser.add_argument('-m', '--mode', required=True, help="Mode of operation")
 
     args = vars(parser.parse_args())
-    conf_file = args['config']
     sent_file = args['sent_file']
     mode = args['mode']
     config = dict()
-    with open(conf_file, 'r') as cf:
+    with open("config", 'r') as cf:
         for l in cf:
             config[l.split(':')[0]] = l.split(':')[1]
     if mode == 'v':
