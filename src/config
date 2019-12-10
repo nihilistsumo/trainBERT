@@ -1,6 +1,15 @@
 ## Vocabulary parameters ##
-vocab_file:base.train.halfwiki
-vocab_size:128000
-subsample_size:51200000
-num_placeholders:256
+vocab_file=base.train.halfwiki
+vocab_size=128000
+subsample_size=51200000
+num_placeholders=256
 ## BERT training parameters ##
+train_batch_size=128
+max_predictions=20
+max_seq_length=512
+masked_lm_prob=0.15
+eval_batch_size=64
+learning_rate=2e-5
+train_steps=1000000
+save_checkpoint_steps=2500
+num_tpu_cores=8

@@ -51,7 +51,7 @@ def main():
         for l in cf:
             if l[0] == '#':
                 continue
-            config[l.split(':')[0]] = l.split(':')[1].rstrip()
+            config[l.split('=')[0]] = l.split('=')[1].rstrip()
     build_vocab(sent_file, config['vocab_file'], int(config['vocab_size']),
         int(config['subsample_size']), int(config['num_placeholders']))
 
