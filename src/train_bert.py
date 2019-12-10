@@ -32,8 +32,8 @@ def train(config, input_dir_path, model_dir, train_data_dir, vocab_file, tpu_nam
     model_fn = model_fn_builder(
         bert_config=bert_config,
         init_checkpoint=INIT_CHECKPOINT,
-        learning_rate=config['learning_rate'],
-        num_train_steps=config['train_steps'],
+        learning_rate=float(config['learning_rate']),
+        num_train_steps=int(config['train_steps']),
         num_warmup_steps=10,
         use_tpu=True,
         use_one_hot_embeddings=True)
@@ -43,26 +43,26 @@ def train(config, input_dir_path, model_dir, train_data_dir, vocab_file, tpu_nam
     run_config = tf.contrib.tpu.RunConfig(
         cluster=tpu_cluster_resolver,
         model_dir=BERT_GCS_DIR,
-        save_checkpoints_steps=config['save_checkpoint_steps'],
+        save_checkpoints_steps=int(config['save_checkpoint_steps']),
         tpu_config=tf.contrib.tpu.TPUConfig(
-            iterations_per_loop=config['save_checkpoint_steps'],
-            num_shards=config['num_tpu_cores'],
+            iterations_per_loop=int(config['save_checkpoint_steps']),
+            num_shards=int(config['num_tpu_cores']),
             per_host_input_for_training=tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2))
 
     estimator = tf.contrib.tpu.TPUEstimator(
         use_tpu=True,
         model_fn=model_fn,
         config=run_config,
-        train_batch_size=config['train_batch_size'],
-        eval_batch_size=config['eval_batch_size'])
+        train_batch_size=int(config['train_batch_size']),
+        eval_batch_size=int(config['eval_batch_size']))
 
     train_input_fn = input_fn_builder(
         input_files=input_files,
-        max_seq_length=config['max_seq_length'],
-        max_predictions_per_seq=config['max_predictions'],
+        max_seq_length=int(config['max_seq_length']),
+        max_predictions_per_seq=int(config['max_predictions']),
         is_training=True)
 
-    estimator.train(input_fn=train_input_fn, max_steps=config['train_steps'])
+    estimator.train(input_fn=train_input_fn, max_steps=int(config['train_steps']))
 
 def main():
     parser = argparse.ArgumentParser(description="Train BERT model")
