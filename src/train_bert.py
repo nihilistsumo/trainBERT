@@ -6,7 +6,7 @@ from google.cloud import storage
 from bert import modeling, optimization, tokenization
 from bert.run_pretraining import input_fn_builder, model_fn_builder
 
-def train(config, bucket_path, model_dir, train_data_dir, vocab_file, tpu_name):
+def train(config, input_dir_path, model_dir, train_data_dir, vocab_file, tpu_name):
     log = logging.getLogger('tensorflow')
     log.setLevel(logging.INFO)
     formatter = logging.Formatter('%(asctime)s :  %(message)s')
@@ -15,8 +15,8 @@ def train(config, bucket_path, model_dir, train_data_dir, vocab_file, tpu_name):
     sh.setFormatter(formatter)
     log.handlers = [sh]
 
-    BERT_GCS_DIR = "{}/{}".format(bucket_path, model_dir)
-    DATA_GCS_DIR = "{}/{}".format(bucket_path, train_data_dir)
+    BERT_GCS_DIR = "{}/{}".format(input_dir_path, model_dir)
+    DATA_GCS_DIR = "{}/{}".format(input_dir_path, train_data_dir)
 
     VOCAB_FILE = os.path.join(BERT_GCS_DIR, vocab_file)
     CONFIG_FILE = os.path.join(BERT_GCS_DIR, "bert_config.json")
@@ -66,14 +66,14 @@ def train(config, bucket_path, model_dir, train_data_dir, vocab_file, tpu_name):
 
 def main():
     parser = argparse.ArgumentParser(description="Train BERT model")
-    parser.add_argument('-b', '--bucket_path', help="Path to Google storage bucket")
+    parser.add_argument('-i', '--input_dir_path', help="Path to input data directory")
     parser.add_argument('-m', '--model_dir', help="Name of model directory")
     parser.add_argument('-d', '--data_dir', help="Name of the train data directory")
     parser.add_argument('-v', '--vocab_file', help="Name of vocab file")
     parser.add_argument('-t', '--tpu_name', help="Name of the tpu")
 
     args = vars(parser.parse_args())
-    bucket_path = args['bucket_path']
+    input_dir_path = args['input_dir_path']
     model_dir = args['model_dir']
     data_dir = args['data_dir']
     vocab = args['vocab_file']
@@ -85,7 +85,7 @@ def main():
                 continue
             config[l.split('=')[0]] = l.split('=')[1].rstrip()
 
-    train(config, bucket_path, model_dir, data_dir, vocab, tpu)
+    train(config, input_dir_path, model_dir, data_dir, vocab, tpu)
 
 if __name__ == '__main__':
     main()
