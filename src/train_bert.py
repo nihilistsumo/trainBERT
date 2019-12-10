@@ -46,8 +46,8 @@ def train(config, input_dir_path, model_dir, train_data_dir, vocab_file, tpu_nam
         save_checkpoints_steps=int(config['save_checkpoint_steps']),
         tpu_config=tf.contrib.tpu.TPUConfig(
             iterations_per_loop=int(config['save_checkpoint_steps']),
-            num_shards=int(config['num_tpu_cores']),
-            per_host_input_for_training=tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2))
+            num_shards=int(config['num_tpu_cores'])))
+            #per_host_input_for_training=tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2))
 
     estimator = tf.contrib.tpu.TPUEstimator(
         use_tpu=True,
