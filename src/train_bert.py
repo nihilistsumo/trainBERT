@@ -1,0 +1,91 @@
+import json, os, pprint, time, sys, logging, argparse
+
+import tensorflow as tf
+
+from google.cloud import storage
+from bert import modeling, optimization, tokenization
+from bert.run_pretraining import input_fn_builder, model_fn_builder
+
+def train(config, bucket_path, model_dir, train_data_dir, vocab_file, tpu_name):
+    log = logging.getLogger('tensorflow')
+    log.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(asctime)s :  %(message)s')
+    sh = logging.StreamHandler()
+    sh.setLevel(logging.INFO)
+    sh.setFormatter(formatter)
+    log.handlers = [sh]
+
+    BERT_GCS_DIR = "{}/{}".format(bucket_path, model_dir)
+    DATA_GCS_DIR = "{}/{}".format(bucket_path, train_data_dir)
+
+    VOCAB_FILE = os.path.join(BERT_GCS_DIR, vocab_file)
+    CONFIG_FILE = os.path.join(BERT_GCS_DIR, "bert_config.json")
+
+    INIT_CHECKPOINT = tf.train.latest_checkpoint(BERT_GCS_DIR)
+
+    bert_config = modeling.BertConfig.from_json_file(CONFIG_FILE)
+    input_files = tf.gfile.Glob(os.path.join(DATA_GCS_DIR, '*tfrecord'))
+
+    log.info("Using checkpoint: {}".format(INIT_CHECKPOINT))
+    log.info("Using {} data shards".format(len(input_files)))
+
+    model_fn = model_fn_builder(
+        bert_config=bert_config,
+        init_checkpoint=INIT_CHECKPOINT,
+        learning_rate=config['learning_rate'],
+        num_train_steps=config['train_steps'],
+        num_warmup_steps=10,
+        use_tpu=True,
+        use_one_hot_embeddings=True)
+
+    tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(tpu_name)
+
+    run_config = tf.contrib.tpu.RunConfig(
+        cluster=tpu_cluster_resolver,
+        model_dir=BERT_GCS_DIR,
+        save_checkpoints_steps=config['save_checkpoint_steps'],
+        tpu_config=tf.contrib.tpu.TPUConfig(
+            iterations_per_loop=config['save_checkpoint_steps'],
+            num_shards=config['num_tpu_cores'],
+            per_host_input_for_training=tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2))
+
+    estimator = tf.contrib.tpu.TPUEstimator(
+        use_tpu=True,
+        model_fn=model_fn,
+        config=run_config,
+        train_batch_size=config['train_batch_size'],
+        eval_batch_size=config['eval_batch_size'])
+
+    train_input_fn = input_fn_builder(
+        input_files=input_files,
+        max_seq_length=config['max_seq_length'],
+        max_predictions_per_seq=config['max_predictions'],
+        is_training=True)
+
+    estimator.train(input_fn=train_input_fn, max_steps=config['train_steps'])
+
+def main():
+    parser = argparse.ArgumentParser(description="Train BERT model")
+    parser.add_argument('-b', '--bucket_path', help="Path to Google storage bucket")
+    parser.add_argument('-m', '--model_dir', help="Name of model directory")
+    parser.add_argument('-d', '--data_dir', help="Name of the train data directory")
+    parser.add_argument('-v', '--vocab_file', help="Name of vocab file")
+    parser.add_argument('-t', '--tpu_name', help="Name of the tpu")
+
+    args = vars(parser.parse_args())
+    bucket_path = args['bucket_path']
+    model_dir = args['model_dir']
+    data_dir = args['data_dir']
+    vocab = args['vocab_file']
+    tpu = args['tpu_name']
+    config = dict()
+    with open("config", 'r') as cf:
+        for l in cf:
+            if l[0] == '#':
+                continue
+            config[l.split('=')[0]] = l.split('=')[1].rstrip()
+
+    train(config, bucket_path, model_dir, data_dir, vocab, tpu)
+
+if __name__ == '__main__':
+    main()
