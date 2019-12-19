@@ -44,10 +44,10 @@ def get_run_config(output_dir, tpu_cluster_resolver, config):
     return tf.contrib.tpu.RunConfig(
         cluster=tpu_cluster_resolver,
         model_dir=output_dir,
-        save_checkpoints_steps=config["save_checkpoint_steps"],
+        save_checkpoints_steps=int(config["save_checkpoint_steps"]),
         tpu_config=tf.contrib.tpu.TPUConfig(
-            iterations_per_loop=config["iterations_per_loop"],
-            num_shards=config["num_tpu_cores"],
+            iterations_per_loop=int(config["iterations_per_loop"]),
+            num_shards=int(config["num_tpu_cores"]),
             per_host_input_for_training=tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2))
 
 def finetune(config, bucket_path, input_dir, model_dir, output_dir, vocab_file, tpu_name):
