@@ -4,15 +4,6 @@ import tensorflow as tf
 
 from google.cloud import storage
 from bert import modeling, optimization, tokenization, run_classifier
-from bert.run_pretraining import input_fn_builder, model_fn_builder
-
-def del_all_flags(FLAGS):
-    flags_dict = FLAGS._flags()
-    keys_list = [keys for keys in flags_dict]
-    for keys in keys_list:
-        FLAGS.__delattr__(keys)
-
-del_all_flags(tf.flags.FLAGS)
 
 def model_predict(estimator, processor, input_dir, predict_batch_size, label_list, max_sequence_length, tokenizer):
     prediction_examples = processor.get_dev_examples(input_dir)[:predict_batch_size]
