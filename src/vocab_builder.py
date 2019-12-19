@@ -43,16 +43,18 @@ def build_vocab(input_file, vocab_file, vocab_size, subsample_size, num_placehol
 def main():
     parser = argparse.ArgumentParser(description="Build vocab for BERT model")
     parser.add_argument('-s', '--sent_file', help="Path to sentence file")
+    parser.add_argument('-v', '--vocab_file', help="Name of the vocab file")
 
     args = vars(parser.parse_args())
     sent_file = args['sent_file']
+    vocab = args['vocab_file']
     config = dict()
     with open("config", 'r') as cf:
         for l in cf:
             if l[0] == '#':
                 continue
             config[l.split('=')[0]] = l.split('=')[1].rstrip()
-    build_vocab(sent_file, config['vocab_file'], int(config['vocab_size']),
+    build_vocab(sent_file, vocab, int(config['vocab_size']),
         int(config['subsample_size']), int(config['num_placeholders']))
 
 if __name__ == '__main__':

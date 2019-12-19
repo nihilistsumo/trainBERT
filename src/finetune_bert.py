@@ -54,8 +54,15 @@ def finetune(config, bucket_path, input_dir, model_dir, output_dir, vocab_file, 
     processor = run_classifier.MrpcProcessor()
     label_list = processor.get_labels()
 
+    BERT_GCS_DIR = "{}/{}".format(bucket_path, model_dir)
+    BERT_DATA_DIR = "{}/{}".format(bucket_path, input_dir)
+    BERT_OUT_DIR = "{}/{}".format(bucket_path, output_dir)
+    INIT_CHECKPOINT = tf.train.latest_checkpoint(BERT_GCS_DIR)
+    CONFIG_FILE = os.path.join(BERT_GCS_DIR, "bert_config.json")
+    VOCAB_FILE = os.path.join(BERT_GCS_DIR, vocab_file)
+
     # Compute number of train and warmup steps from batch size
-    train_examples = processor.get_train_examples(input_dir)
+    train_examples = processor.get_train_examples(BERT_DATA_DIR)
     num_train_steps = int(len(train_examples) / int(config["train_batch_size"]) * float(config["num_train_epochs"]))
     num_warmup_steps = int(num_train_steps * float(config["warmup_proportion"]))
     train_batch_size = int(config["train_batch_size"])
@@ -64,10 +71,6 @@ def finetune(config, bucket_path, input_dir, model_dir, output_dir, vocab_file, 
     do_lowercase = bool(config["do_lowercase"])
     max_sequence_length = int(config["max_seq_length"])
 
-    BERT_GCS_DIR = "{}/{}".format(bucket_path, model_dir)
-    INIT_CHECKPOINT = tf.train.latest_checkpoint(BERT_GCS_DIR)
-    CONFIG_FILE = os.path.join(BERT_GCS_DIR, "bert_config.json")
-    VOCAB_FILE = os.path.join(BERT_GCS_DIR, vocab_file)
     bert_config = modeling.BertConfig.from_json_file(CONFIG_FILE)
 
     tpu_cluster_resolver = tf.contrib.cluster_resolver.TPUClusterResolver(tpu_name)
@@ -86,7 +89,7 @@ def finetune(config, bucket_path, input_dir, model_dir, output_dir, vocab_file, 
     estimator = tf.contrib.tpu.TPUEstimator(
         use_tpu=True,
         model_fn=model_fn,
-        config=get_run_config(output_dir, tpu_cluster_resolver, config),
+        config=get_run_config(BERT_OUT_DIR, tpu_cluster_resolver, config),
         train_batch_size=train_batch_size,
         eval_batch_size=eval_batch_size,
         predict_batch_size=predict_batch_size
@@ -109,8 +112,8 @@ def finetune(config, bucket_path, input_dir, model_dir, output_dir, vocab_file, 
     estimator.train(input_fn=train_input_fn, max_steps=num_train_steps)
     print('***** Finished training at {} *****'.format(datetime.datetime.now()))
 
-    model_eval(estimator, processor, input_dir, label_list, max_sequence_length, tokenizer, eval_batch_size, output_dir)
-    model_predict(estimator, processor, input_dir, predict_batch_size, label_list, max_sequence_length, tokenizer)
+    model_eval(estimator, processor, BERT_DATA_DIR, label_list, max_sequence_length, tokenizer, eval_batch_size, BERT_OUT_DIR)
+    model_predict(estimator, processor, BERT_DATA_DIR, predict_batch_size, label_list, max_sequence_length, tokenizer)
 
 def main():
     parser = argparse.ArgumentParser(description="Fine-tune BERT model")
